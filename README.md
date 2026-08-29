@@ -41,6 +41,7 @@ The following checks were performed:
 - Reviewed date and time data types
 
 			    -- Data-quality assessment and cleaning--
+``` sql
 SELECT 
     *
 FROM
@@ -50,6 +51,7 @@ SELECT
 FROM
     retailsales;
 describe retailsales;
+```
 
 SELECT 
     sale_date, sale_time
