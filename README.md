@@ -315,6 +315,7 @@ FROM
     retailsales
     group by category
     order by gross_profit desc;
+```
 
 
 ## Category Profitability Analysis
@@ -325,7 +326,7 @@ FROM
 - What % of total revenue does each category contribute?
 
 -- Revenue contribution % --
-    
+ ``` sql   
 SELECT
     category,
     ROUND(SUM(total_sale), 2) AS revenue,
@@ -341,7 +342,7 @@ FROM retailsales
 GROUP BY category
 
 ORDER BY revenue DESC;
-
+```
 
 ## Customer Analysis
 
@@ -353,7 +354,7 @@ ORDER BY revenue DESC;
 - Revenue per customer
 
 -- Customer value analysis --
-
+``` sql
 select 
 customer_id,
     COUNT(distinct transactions_id) as transactions,
