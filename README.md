@@ -26,6 +26,15 @@ The dataset contains retail transaction information including:
 10 COGS
 11 Total Sale
 
+## Database creation
+```sql
+    create database rs;
+    use rs;
+    
+    select * from retailsales;
+    
+    select count(*) from retailsales;
+```
 ## 1. Data Quality Assessment
 
 Before performing the analysis, I assessed the quality and reliability of the dataset.
