@@ -274,6 +274,8 @@ FROM
 GROUP BY YEAR(sale_date)
 ORDER BY sales_year;
 
+-- column name update --
+
 alter table retailsales
 rename column quantiy to quantity;
 ```
@@ -284,14 +286,14 @@ Calculated key business metrics to understand overall retail performance.
 
 KPIs analysed:
 
-Total Transactions
-Unique Customers
-Total Units Sold
-Total Revenue
-Total COGS
-Gross Profit
-Gross Margin %
-Average Transaction Value
+- Total Transactions
+- Unique Customers
+- Total Units Sold
+- Total Revenue
+- Total COGS
+- Gross Profit
+- Gross Margin %
+- Average Transaction Value
 
 -- Overall business KPIs --
 
@@ -313,7 +315,15 @@ FROM
     retailsales
     group by category
     order by gross_profit desc;
-    
+
+
+## Category Profitability Analysis
+
+- Which category generates the most revenue?
+- Which category generates the most profit?
+- Which has the highest margin?
+- What % of total revenue does each category contribute?
+
 -- Revenue contribution % --
     
 SELECT
@@ -331,7 +341,17 @@ FROM retailsales
 GROUP BY category
 
 ORDER BY revenue DESC;
-    
+
+
+## Customer Analysis
+
+- Top customers by spending
+- Number of transactions per customer
+- Units purchased
+- Average transaction value
+- Profit generated
+- Revenue per customer
+
 -- Customer value analysis --
 
 select 
@@ -343,8 +363,6 @@ customer_id,
     
     round(sum(total_sale - cogs)/SUM(total_sale) * 100, 2) as gross_margin_pct 
     
-    
-
 from retailsales
 group by customer_id
 order by total_revenue desc
