@@ -52,7 +52,7 @@ FROM
     retailsales;
 describe retailsales;
 ```
-
+``` sql
 SELECT 
     sale_date, sale_time
 FROM
@@ -276,6 +276,7 @@ ORDER BY sales_year;
 
 alter table retailsales
 rename column quantiy to quantity;
+```
 
 ## Business KPI Analysis
 
