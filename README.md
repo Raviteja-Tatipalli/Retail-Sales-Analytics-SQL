@@ -294,6 +294,7 @@ Gross Margin %
 Average Transaction Value
 
 -- Overall business KPIs --
+
  ``` sql
  SELECT category,
     COUNT(DISTINCT transactions_id) AS total_transactions,
