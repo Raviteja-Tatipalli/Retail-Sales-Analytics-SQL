@@ -294,7 +294,7 @@ Gross Margin %
 Average Transaction Value
 
 -- Overall business KPIs --
- 
+ ``` sql
  SELECT category,
     COUNT(DISTINCT transactions_id) AS total_transactions,
     COUNT(DISTINCT customer_id) AS unique_customers,
@@ -359,6 +359,7 @@ SELECT
         2
     ) AS revenue_per_customer
 FROM retailsales;
+```
 
 This project is designed to demonstrate SQL skills and techniques typically used by data analysts to explore, clean, and analyse retail sales data. The project involves setting up a retail sales database, performing exploratory data analysis (EDA), and answering specific business questions through SQL queries. This project is ideal for those who are starting their journey in data analysis and want to build a solid foundation in SQL.
 
