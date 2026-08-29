@@ -14,17 +14,17 @@ SQL
 
 The dataset contains retail transaction information including:
 
-1 Transaction ID
-2 Sale Date
-3 Sale Time
-4 Customer ID
-5 Gender
-6 Age
-7 Product Category
-8 Quantity
-9 Price Per Unit
-10 COGS
-11 Total Sale
+- Transaction ID
+- Sale Date
+- Sale Time
+- Customer ID
+- Gender
+- Age
+- Product Category
+- Quantity
+- Price Per Unit
+- COGS
+- Total Sale
 
 ## Database creation
 ```sql
