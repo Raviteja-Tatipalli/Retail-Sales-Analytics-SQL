@@ -7,24 +7,7 @@ The analysis focuses on identifying key revenue and profit drivers, understandin
 
 The project demonstrates how SQL can be used to transform transactional data into actionable business insights.
 
-## Dataset
-The dataset contains retail transaction information including:
-
-- Transaction ID
-- Sale Date
-- Sale Time
-- Customer ID
-- Gender
-- Age
-- Product Category
-- Quantity
-- Price Per Unit
-- COGS
-- Total Sale
-
-
 ## Business Questions
-
 The analysis aims to answer the following questions:
 
 1. What are the overall revenue, cost, profit and gross margin?
@@ -37,7 +20,6 @@ The analysis aims to answer the following questions:
 8. How does customer purchase frequency relate to revenue and spending?
 
 ## Tools & SQL Techniques
-
 - MySQL
 - MySQL Workbench
 - Data cleaning and validation
@@ -52,6 +34,77 @@ The analysis aims to answer the following questions:
 - Month-on-Month (MoM) analysis
 - Year-on-Year (YoY) analysis
 - Customer segmentation
+
+## dataset
+The dataset contains retail transaction records covering sales across three product categories: Clothing, Electronics, and Beauty.
+
+### Key Fields
+- `transactions_id` – Unique transaction identifier
+- `sale_date` – Date of transaction
+- `sale_time` – Time of transaction
+- `customer_id` – Customer identifier
+- `gender` – Customer gender
+- `age` – Customer age
+- `category` – Product category
+- `quantity` – Number of units purchased
+- `price_per_unit` – Selling price per unit
+- `cogs` – Cost of goods sold
+- `total_sale` – Total transaction value
+
+## Data Quality Assessment & Cleaning
+Before performing the business analysis, the dataset was assessed to identify potential data quality issues that could affect the accuracy of the results.
+
+The following checks were performed:
+
+- Checked key columns for NULL values.
+- Checked for duplicate transaction IDs.
+- Checked for duplicate records.
+- Validated customer age ranges.
+- Checked for invalid or non-positive quantities.
+- Checked for invalid product prices.
+- Validated COGS values.
+- Checked whether COGS exceeded total sales.
+- Reconciled `total_sale` against `quantity × price_per_unit`.
+- Reviewed category and gender values for consistency.
+- Reviewed the transaction date range.
+- Renamed the misspelled `quantiy` column to `quantity` for consistency and readability.
+
+### Sales Reconciliation
+Transaction totals were validated using:
+`total_sale = quantity × price_per_unit`
+
+## Business Analysis & Key Results
+
+### 1. Overall Business Performance
+
+The analysis produced the following overall KPIs:
+
+| KPI | Result |
+|---|---:|
+| Total Transactions | 1,987 |
+| Unique Customers | 155 |
+| Total Units Sold | 4,995 |
+| Total Revenue | £908,230 |
+| Total COGS | £189,114 |
+| Gross Profit | £719,116 |
+| Average Transaction Value | £457.09 |
+| Gross Margin | 79.18% |
+
+The business generated **£908,230 in revenue** and **£719,116 in gross profit**, resulting in a recorded gross margin of **79.18%**.
+
+
+### 2. Category Performance
+| Category | Transactions | Units Sold | Revenue | Gross Profit | Avg. Transaction Value |
+|---|---:|---:|---:|---:|---:|
+| Electronics | 678 | 1,682 | £311,445 | £244,707 | £459.36 |
+| Clothing | 698 | 1,780 | £309,995 | £245,883 | £444.12 |
+| Beauty | 611 | 1,533 | £286,790 | £228,526 | £469.38 |
+
+### Key Observations
+- **Electronics** generated the highest revenue at **£311,445**.
+- **Clothing** generated the highest gross profit at **£245,883** and recorded the highest sales volume with **1,780 units sold**.
+- **Beauty** had the highest average transaction value at **£469.38**, despite generating the lowest total revenue among the three categories.
+- The highest-revenue category was not the highest-profit category, highlighting the importance of analysing profitability alongside sales revenue.
 
 ## Database creation
 ```sql
