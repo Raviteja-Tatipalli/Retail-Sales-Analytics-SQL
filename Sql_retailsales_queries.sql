@@ -1,13 +1,19 @@
--- Database creation --
-create database rs;
-use rs;
+-- =====================================================
+-- RETAIL SALES & CUSTOMER BEHAVIOUR ANALYSIS
+-- MySQL
+-- =====================================================
 
-select * from retailsales;
+-- DATABASE SETUP --
 
-select count(*) from retailsales;
+CREATE TABLE retailsales_backup AS SELECT * FROM
+    retailsales;
+SELECT 
+    *
+FROM
+    retailsales_backup;
 
-                      -- Understand the dataset --
-			    -- Data-quality assessment and cleaning--
+                      -- UNDERSTAND DATASET --
+			    -- DATA QUALITY ASSESSMENT AND CLEANING --
 SELECT 
     *
 FROM
@@ -248,9 +254,24 @@ FROM
     retailsales;
 
                       -- Cleaning complete --
--------------------------------------------------------------------------------------------                      
-			  -- Business KPI and Profitablility analysis --
--- Overall business KPIs --
+-- -----------------------------------------------------------------------------------------                      
+			  -- BUSINESS KPIs AND PROFITABILITY ANALYSIS --
+-- OVERALL BUSINESS KPIs --
+
+SELECT 
+
+    COUNT(DISTINCT transactions_id) AS total_transactions,
+    COUNT(DISTINCT customer_id) AS unique_customers,
+    SUM(quantity) AS total_units_sold,
+    ROUND(SUM(total_sale), 2) AS total_revenue,
+    SUM(cogs) AS total_cogs,
+    SUM(total_sale - cogs) AS gross_profit,
+    ROUND(AVG(total_sale), 2) AS avg_value,
+    round(sum(total_sale - cogs)/nullif(sum(total_sale), 0) * 100,2) as gross_margin_pct
+
+from retailsales;
+ 
+ -- CATEGORY & PROFITABILITY ANALYSIS --
  
  SELECT category,
     COUNT(DISTINCT transactions_id) AS total_transactions,
@@ -270,7 +291,7 @@ FROM
     group by category
     order by gross_profit desc;
     
--- Revenue contribution % --
+-- REVENUE CONTRIBUTION % --
     
 SELECT
     category,
@@ -288,7 +309,7 @@ GROUP BY category
 
 ORDER BY revenue DESC;
     
--- Customer value analysis --
+-- CUSTOMER VALUE ANALYSIS --
 
 select 
 customer_id,
@@ -299,8 +320,6 @@ customer_id,
     
     round(sum(total_sale - cogs)/SUM(total_sale) * 100, 2) as gross_margin_pct 
     
-    
-
 from retailsales
 group by customer_id
 order by total_revenue desc
@@ -316,84 +335,319 @@ SELECT
         2
     ) AS revenue_per_customer
 FROM retailsales;
+ 
+  -- ADVANCED MONTHLY SALES TREND ANALYSIS --
+  
+SELECT 
+    YEAR(sale_date) AS sales_year,
+    MONTH(sale_date) AS sales_month,
+    ROUND(SUM(total_sale), 2) AS monthly_revenue
+FROM
+    retailsales
+GROUP BY YEAR(sale_date) , MONTH(sale_date)
+ORDER BY sales_year, sales_month;
+ 
+-- CREATING CTEs --
+-- MONTH-ON-MONTH GROWTH --
+
+with monthly_sales as (
+SELECT 
+    YEAR(sale_date) AS sales_year,
+    MONTH(sale_date) AS sales_month,
+    ROUND(SUM(total_sale), 2) AS monthly_revenue
+FROM
+    retailsales
+GROUP BY YEAR(sale_date) , MONTH(sale_date)
+),
+revenue_comparison as (select sales_year, sales_month, monthly_revenue,
+lag(monthly_revenue) over (order by sales_year, sales_month
+) as previous_month_revenue
+from monthly_sales
+),
+
+mom_difference as (select sales_year, 
+sales_month, 
+monthly_revenue, 
+previous_month_revenue,
+round (
+monthly_revenue - previous_month_revenue
+) as mom_growth
+from revenue_comparison),
+
+mom_pct as (select 
+sales_year, 
+sales_month, 
+monthly_revenue, 
+previous_month_revenue,
+mom_growth,
+
+round (mom_growth/nullif(previous_month_revenue , 0 ) * 100, 2) as
+mom_growth_pct
+from mom_difference),
+
+ranking_revenue as (select sales_year, 
+sales_month, 
+monthly_revenue, 
+previous_month_revenue,
+mom_growth,
+mom_growth_pct,
+sum(monthly_revenue) over ( partition by sales_year 
+order by sales_month
+) as running_total_revenue,
+
+ RANK() OVER (partition by sales_year 
+        ORDER BY monthly_revenue DESC
+    ) AS best_rank,
+    
+rank() over (partition by sales_year
+order by monthly_revenue asc
+) as worst_rank
+
+from mom_pct)
+
+select sales_year, 
+sales_month, 
+monthly_revenue, 
+previous_month_revenue,
+mom_growth,
+mom_growth_pct,
+running_total_revenue,
+best_rank,
+worst_rank
+
+from ranking_revenue
+
+where best_rank = 1 or
+worst_rank = 1;
+
+-- YEAR-ON-YEAR GROWTH --
+
+WITH monthly_sales AS (
+    SELECT
+        YEAR(sale_date) AS sales_year,
+        MONTH(sale_date) AS sales_month,
+        ROUND(SUM(total_sale), 2) AS monthly_revenue
+    FROM retailsales
+    GROUP BY
+        YEAR(sale_date),
+        MONTH(sale_date)
+),
+
+yoy_comparison AS (
+    SELECT
+        sales_year,
+        sales_month,
+        monthly_revenue,
+
+        LAG(monthly_revenue) OVER (
+            PARTITION BY sales_month
+            ORDER BY sales_year
+        ) AS previous_year_revenue
+
+    FROM monthly_sales
+)
+
+SELECT
+    sales_year,
+    sales_month,
+    monthly_revenue,
+    previous_year_revenue,
+
+    ROUND(
+        monthly_revenue - previous_year_revenue,
+        2
+    ) AS yoy_difference,
+
+    ROUND(
+        (monthly_revenue - previous_year_revenue)
+        / NULLIF(previous_year_revenue, 0)
+        * 100,
+        2
+    ) AS yoy_growth_pct
+
+FROM yoy_comparison
+ORDER BY sales_year, sales_month;
 
 
--- Write a SQL query to retrieve all transactions where the category is clothing and the quantity sold is more than 10 in the month of November 2022
+select * from retailsales;
 
-select sale_date, category, quantiy from retailsales
-where category = 'Clothing' and
-year(sale_date) = 2022 and month(sale_date) = 11
-and quantiy >= 4;
+-- CUSTOMER VALUE SEGMENTATION -- 
 
+with customer_summary as (select 
+customer_id,
+count(distinct transactions_id) as total_transaction,
+sum(quantity) as total_units,
+sum(total_sale) as total_spend,
+round(avg(total_sale), 2) as avg_spend_value,
+sum(total_sale-cogs) as gross_profit_generated
 
--- Write a SQL query to calculate the total sales (total sales) for each category 
-
-select category, sum(total_sale) as Net_sale, 
-count(*) as Total_orders
 from retailsales
-group by 1;
+group by customer_id
+)
 
--- write a sql query to find the average age of customers who purchased items from The beauty category
+select *
+from customer_summary
+order by total_spend desc;
 
-select round(avg(age), 2) from retailsales
-where category = 'beauty';
+with customer_summary as (select 
+customer_id,
+count(distinct transactions_id) as total_transaction,
+sum(quantity) as total_units,
+sum(total_sale) as total_spend,
+round(avg(total_sale), 2) as avg_spend_value,
+sum(total_sale-cogs) as gross_profit_generated
 
--- Write a SQL query to find all transactions where the total sale is greater than 1000
-
-select * from retailsales
-where total_sale > 1000;
-
--- Write a sequel query to find the total number of transactions transaction ID made by each gender in each category
-
-select gender, category, count(*) from retailsales
-group by 1,2
-order by 1;
-
--- write a SQL query to calculate the average sale for each month find out best selling month in each year
-select year, month, avg_sale
- from (
-			select 
-			year(sale_date) as year,
-			month(sale_date) as month,
-			avg(total_sale) as avg_sale, 
-			rank() over (partition by year(sale_date) order by avg(total_sale) desc) as position
-			from retailsales
-			group by 1,2
-) as sq
-where position = 1;
-
--- Write a sql query to find the top 5 customers based on the highest total sales
-
-select customer_id, sum(total_sale)
 from retailsales
-group by 1
-order by 2 desc
-limit 5;
+group by customer_id),
 
--- Write is sql query to find the number of unique customer who purchased items from each category
+customer_ranking as (select 
+customer_id,
+total_transaction,
+total_units,
+total_spend,
+avg_spend_value,
+gross_profit_generated,
+
+ntile(3) over (
+order by total_spend desc
+) as spend_group
+
+from customer_summary),
+
+customer_segments as (select 
+customer_id,
+total_transaction,
+total_units,
+total_spend,
+avg_spend_value,
+gross_profit_generated,
+
+case 
+when spend_group = 1 then 'High value'
+when spend_group = 2 then 'Medium value'
+when spend_group = 3 then 'low value'
+end as customer_segment
+
+from customer_ranking)
+
+select
+customer_segment,
+count(customer_id) as customer_count,
+sum(total_spend) as segment_revenue,
+round(sum(total_spend)/ sum(sum(total_spend)) over() * 100, 2) as revenue_contribution_pct,
+round(sum(total_spend), 2) as avg_segment_revenue,
+sum(gross_profit_generated) as segment_profit
+
+from customer_segments
+
+group by customer_segment
+order by segment_revenue desc;
+
+-- REPEATE CUSTOMER / PURCHASE FREQUENCY ANALYSIS --
+
+WITH customer_frequency AS (
+    SELECT
+        customer_id,
+        COUNT(DISTINCT transactions_id) AS total_transactions,
+        ROUND(SUM(total_sale), 2) AS total_spend
+    FROM retailsales
+    GROUP BY customer_id
+)
+
+SELECT
+    CASE
+        WHEN total_transactions = 1 THEN 'One-time Customer'
+        ELSE 'Repeat Customer'
+    END AS customer_type,
+
+    COUNT(customer_id) AS customer_count,
+
+    ROUND(SUM(total_spend), 2) AS total_revenue,
+
+    ROUND(AVG(total_spend), 2) AS avg_customer_spend
+
+FROM customer_frequency
+
+GROUP BY
+    customer_type
+
+ORDER BY total_revenue DESC;
+ 
+
+with customer_frequency as (select 
+customer_id,
+count(distinct transactions_id) as total_transactions
+from retailsales
+group by customer_id)
 
 select 
-count(distinct customer_id), 
-category from retailsales
-group by 2;
+total_transactions,
+count(customer_id) as customer_count
+from customer_frequency
 
--- Write a SQL query to create each shift and number of orders example morning less than or equal to 12, afternoon between 12 and 17 evenings greater than 17
-with hourly_sale
-as (
-select *,
-	case
-		when hour(sale_time) < 12  then 'morning'
-		when hour(sale_time) between 12 and 17 then 'afternoon'
-	else 'evening'
-	end as shift
-from retailsales
+group by total_transactions
+order by total_transactions;
+
+
+SELECT
+    customer_id,
+    COUNT(DISTINCT transactions_id) AS total_transactions,
+    SUM(quantity) AS total_units,
+    ROUND(SUM(total_sale), 2) AS total_spend,
+    MIN(sale_date) AS first_purchase,
+    MAX(sale_date) AS last_purchase
+FROM retailsales
+GROUP BY customer_id
+HAVING COUNT(DISTINCT transactions_id) > 25
+ORDER BY total_transactions DESC;
+
+-- PURCHASE FREQUENCY ANALYSIS -- 
+
+WITH customer_frequency AS (
+    SELECT
+        customer_id,
+        COUNT(DISTINCT transactions_id) AS total_transactions,
+        ROUND(SUM(total_sale), 2) AS total_spend
+    FROM retailsales
+    GROUP BY customer_id
+),
+
+frequency_ranking AS (
+    SELECT
+        customer_id,
+        total_transactions,
+        total_spend,
+
+        NTILE(3) OVER (
+            ORDER BY total_transactions DESC
+        ) AS frequency_group
+
+    FROM customer_frequency
+),
+
+frequency_segments AS (
+    SELECT
+        customer_id,
+        total_transactions,
+        total_spend,
+
+        CASE
+            WHEN frequency_group = 1 THEN 'High Frequency'
+            WHEN frequency_group = 2 THEN 'Medium Frequency'
+            WHEN frequency_group = 3 THEN 'Low Frequency'
+        END AS frequency_segment
+
+    FROM frequency_ranking
 )
-select shift, 
-count(*) as total_orders
-from hourly_sale
-group by shift
-order by 2 desc;
 
+SELECT
+    frequency_segment,
+    COUNT(customer_id) AS customer_count,
+    ROUND(AVG(total_transactions), 2) AS avg_transactions,
+    ROUND(SUM(total_spend), 2) AS total_revenue,
+    ROUND(AVG(total_spend), 2) AS avg_customer_spend
+FROM frequency_segments
+GROUP BY frequency_segment
+ORDER BY avg_transactions DESC;
 
-
-
+select * from retailsales;
